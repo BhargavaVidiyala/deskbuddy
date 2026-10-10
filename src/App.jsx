@@ -1,49 +1,54 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import { addTask, toggleTask, deleteTask } from "./tasks";
 import "./App.css";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const [tasks, setTasks] = useState([]);
+  const [text, setText] = useState("");
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
+  function handleSubmit(e) {
+    e.preventDefault();
+    setTasks((prev) => addTask(prev, text));
+    setText("");
   }
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
+    <main className="note">
+      <form className="add" onSubmit={handleSubmit}>
         <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
+          value={text}
+          onChange={(e) => setText(e.currentTarget.value)}
+          placeholder="Add a task..."
+          aria-label="New task"
         />
-        <button type="submit">Greet</button>
+        <button type="submit">Add</button>
       </form>
-      <p>{greetMsg}</p>
+
+      {tasks.length === 0 ? (
+        <p className="empty">Nothing to do</p>
+      ) : (
+        <ul className="tasks">
+          {tasks.map((task) => (
+            <li key={task.id} className={task.done ? "done" : ""}>
+              <input
+                type="checkbox"
+                checked={task.done}
+                onChange={() => setTasks((prev) => toggleTask(prev, task.id))}
+                aria-label={`Mark "${task.text}" done`}
+              />
+              <span>{task.text}</span>
+              <button
+                type="button"
+                className="delete"
+                onClick={() => setTasks((prev) => deleteTask(prev, task.id))}
+                aria-label={`Delete "${task.text}"`}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }
